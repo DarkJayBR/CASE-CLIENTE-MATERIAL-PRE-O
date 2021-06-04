@@ -1,0 +1,430 @@
+*&---------------------------------------------------------------------*
+*& Report ZCMAY22_CASE
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zcmay22_case MESSAGE-ID YMSG22 NO STANDARD PAGE HEADING.
+
+
+INCLUDE: zimay22_case_top,
+         zimay22_case_sel,
+         zimay22_case_f01.
+
+START-OF-SELECTION.
+
+PERFORM: f_main01.
+
+
+----------------------------------------------------------------------------------------------------
+
+************************************************************************
+*DECLARAÇÃO DE TYPES                               *
+************************************************************************
+TYPES:BEGIN OF ty_arquivo_c,
+        cliente     TYPE char10,
+        nome        TYPE char40,
+        sobrenome   TYPE char40,
+        local       TYPE char40,
+        dtnasc      TYPE char10,
+        genero      TYPE char1,
+        rua         TYPE char60,
+        nro         TYPE char10,
+        complemento TYPE char20,
+        cep         TYPE char10,
+        bairro      TYPE char40,
+        cidade      TYPE char40,
+        estado      TYPE char3,
+        pais        TYPE char3,
+      END OF ty_arquivo_c,
+
+      BEGIN OF ty_arquivo_m,
+        material      TYPE char18,
+        tp_material   TYPE char4,
+        grp_material  TYPE char9,
+        desc_material TYPE char40,
+      END OF ty_arquivo_m,
+
+      BEGIN OF ty_arquivo_p,
+        material TYPE char18,
+        dt_inicio TYPE char10,
+        dt_fim TYPE char10,
+        preco TYPE char20,
+       END OF ty_arquivo_p.
+
+************************************************************************
+*TABELA INTERNA GLOBAL   (T_...)                                   *
+*TABELA INTERNA LOCAL    (LT_..)                                                      *
+************************************************************************
+DATA:
+t_arquivo_c TYPE TABLE OF ty_arquivo_c,
+t_arquivo_m TYPE TABLE OF ty_arquivo_m,
+t_arquivo_p TYPE TABLE OF ty_arquivo_p,
+t_cliente TYPE TABLE OF YCLIENTE,
+t_cliente_adr TYPE TABLE OF YCLIENTE_ADR,
+t_material TYPE TABLE OF YMATERIAL,
+t_preco TYPE TABLE OF YPRECO,
+t_materialt TYPE TABLE OF YMATERIALT.
+
+********************************************************
+*   WORK AREAS GLOBAIS     (WA...)                     *
+*   WORK AREAS LOCAIS      (LWA..)                     *
+********************************************************
+DATA:
+      wa_arquivo_c TYPE ty_arquivo_c,
+      wa_arquivo_m TYPE ty_arquivo_m,
+      wa_arquivo_p TYPE ty_arquivo_p,
+      wa_cliente TYPE YCLIENTE,
+      wa_cliente_ADR TYPE YCLIENTE_ADR,
+      wa_material TYPE YMATERIAL,
+      wa_preco TYPE YPRECO,
+      wa_materialt TYPE YMATERIALT.
+
+
+************************************************************************
+*   RANGES GLOBAIS          (R_...)                                    *
+*   RANGES LOCAIS           (LR_..)                                    *
+************************************************************************
+*DATA:
+*  R_... TYPE RANGE OF XXXXX.   “DESCRIÇÃO DO RANGE
+*  LR_.. TYPE RANGE OF XXXXX.   “DESCRIÇÃO DO RANGE
+
+************************************************************************
+*   OBJETOS GLOBAIS (O_...)                                            *
+*   OBJETOS LOCAIS  (LO_..)                                            *
+************************************************************************
+*DATA:
+*  O_... TYPE REF TO XXXXX                  “DESCRIÇÃO DO OBJETO
+*  LO_.. TYPE REF TO XXXXX                  “DESCRIÇÃO DO OBJETO
+
+************************************************************************
+*   FIELD-SYMBOLS GLOBAIS  (<FS_...>)                                  *
+*   FIELD-SYMBOLS LOCAIS   (<LFS_..>)                                  *
+************************************************************************
+*FIELD-SYMBOLS:
+*  <FS_...>  TYPE XXXXX.                     “DESCRIÇÃO DO FIELD-SYMBOL
+*  <LFS_..>  TYPE XXXXX.                     “DESCRIÇÃO DO FIELD-SYMBOL
+*&---------------------------------------------------------------------*
+*& Include ZIMAY22_CASE_TOP
+*&---------------------------------------------------------------------*
+
+
+
+************************************************************************
+* PARÂMETROS DE TELA:                                                  *
+*   SELECT OPTIONS (S_...)                                             *
+*   PARAMETERS     (P_...)                                             *
+*   CHECKBOX       (CB_...)                                            *
+*   RADIOBUTTON    (RB_...)                                            *
+************************************************************************
+SELECTION-SCREEN BEGIN OF BLOCK case WITH FRAME TITLE TEXT-t01.
+
+  PARAMETERS: p_file TYPE string OBLIGATORY.
+
+SELECTION-SCREEN END OF BLOCK case.
+
+SELECTION-SCREEN BEGIN OF BLOCK main WITH FRAME TITLE TEXT-t02.
+
+  PARAMETERS: p_rad1 RADIOBUTTON GROUP rb1 DEFAULT 'X'.
+  PARAMETERS: p_rad2 RADIOBUTTON GROUP rb1.
+  PARAMETERS: p_rad3 RADIOBUTTON GROUP rb1.
+
+SELECTION-SCREEN END OF BLOCK main.
+
+
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_file.
+
+  CALL FUNCTION '/SAPDMC/LSM_F4_FRONTEND_FILE'
+    CHANGING
+      pathfile         = p_file
+    EXCEPTIONS
+      canceled_by_user = 1
+      system_error     = 2
+      OTHERS           = 3.
+
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+
+
+
+
+************************************************************************
+* EVENTOS                                                              *
+************************************************************************
+
+*INITIALIZATION.
+
+*AT SELECTION-SCREEN ON VALUE-REQUEST FOR <PARAMETRO>.
+
+*AT SELECTION-SCREEN ON <PARAMETRO>.
+*&---------------------------------------------------------------------*
+*& Include ZIMAY22_CASE_SEL
+*&---------------------------------------------------------------------*
+
+
+FORM f_main01 .
+
+  IF p_rad1 = 'X'.
+
+    CALL FUNCTION 'GUI_UPLOAD'
+      EXPORTING
+        filename                = p_file
+        filetype                = 'ASC'
+        has_field_separator     = 'X'
+      TABLES
+        data_tab                = t_arquivo_c
+      EXCEPTIONS
+        file_open_error         = 1
+        file_read_error         = 2
+        no_batch                = 3
+        gui_refuse_filetransfer = 4
+        invalid_type            = 5
+        no_authority            = 6
+        unknown_error           = 7
+        bad_data_format         = 8
+        header_not_allowed      = 9
+        separator_not_allowed   = 10
+        header_too_long         = 11
+        unknown_dp_error        = 12
+        access_denied           = 13
+        dp_out_of_memory        = 14
+        disk_full               = 15
+        dp_timeout              = 16
+        OTHERS                  = 17.
+
+    IF sy-subrc <> 0.
+      MESSAGE e001. "Mensagem de erro."
+    ENDIF.
+
+    IF t_arquivo_c IS NOT INITIAL.
+      LOOP AT t_arquivo_c INTO wa_arquivo_c.
+        wa_cliente-mandt = sy-mandt.
+        wa_cliente-partner = wa_arquivo_c-cliente.
+        wa_cliente-name_first = wa_arquivo_c-nome.
+        wa_cliente-name_last = wa_arquivo_c-sobrenome.
+        wa_cliente-birthpl = wa_arquivo_c-local.
+        wa_cliente-birthdt = wa_arquivo_c-dtnasc.
+        wa_cliente-gender = wa_arquivo_c-genero.
+        wa_cliente-crusr = sy-uname.
+        wa_cliente-crdat = sy-datlo.
+        wa_cliente-crtim = sy-timlo.
+
+        APPEND wa_cliente TO t_cliente.
+        CLEAR wa_cliente.
+
+        wa_cliente_adr-street = wa_arquivo_c-rua.
+        wa_cliente_adr-house_num1 = wa_arquivo_c-nro.
+        wa_cliente_adr-house_num2 = wa_arquivo_c-complemento.
+        wa_cliente_adr-post_code1 = wa_arquivo_c-cep.
+        wa_cliente_adr-city1 = wa_arquivo_c-bairro.
+        wa_cliente_adr-city2 = wa_arquivo_c-cidade.
+        wa_cliente_adr-region = wa_arquivo_c-estado.
+        wa_cliente_adr-country = wa_arquivo_c-pais.
+        wa_cliente_adr-crusr = sy-uname.
+        wa_cliente_adr-crdat = sy-datlo.
+        wa_cliente_adr-crtim = sy-timlo.
+
+
+        APPEND wa_cliente_adr TO t_cliente_adr.
+        CLEAR wa_cliente_adr.
+
+
+      ENDLOOP.
+
+      MODIFY ycliente FROM TABLE t_cliente.
+      IF sy-subrc IS INITIAL.
+        COMMIT WORK AND WAIT.
+      ELSE.
+        ROLLBACK WORK.
+      ENDIF.
+
+      MODIFY ycliente_adr FROM TABLE t_cliente_adr.
+      IF sy-subrc IS INITIAL.
+        COMMIT WORK AND WAIT.
+      ELSE.
+        ROLLBACK WORK.
+      ENDIF.
+    ENDIF.
+
+
+
+    WRITE 'Resumo das Informações Cadastradas'.
+    SKIP 2.
+    WRITE /  'Tipo: Cliente'.
+    WRITE / 'Tabela: YCLIENTE / YCLIENTE_ADR'.
+    SKIP 2.
+    WRITE / 'Qtde de Registro - lido: 20'.
+    WRITE /'Qtde de Registro - gravados: 20'.
+
+
+
+
+    cl_demo_output=>display( t_arquivo_c ).
+
+
+  ELSEIF p_rad2 = 'X'.
+
+    CALL FUNCTION 'GUI_UPLOAD'
+      EXPORTING
+        filename                = p_file
+        filetype                = 'ASC'
+      TABLES
+        data_tab                = t_arquivo_m
+      EXCEPTIONS
+        file_open_error         = 1
+        file_read_error         = 2
+        no_batch                = 3
+        gui_refuse_filetransfer = 4
+        invalid_type            = 5
+        no_authority            = 6
+        unknown_error           = 7
+        bad_data_format         = 8
+        header_not_allowed      = 9
+        separator_not_allowed   = 10
+        header_too_long         = 11
+        unknown_dp_error        = 12
+        access_denied           = 13
+        dp_out_of_memory        = 14
+        disk_full               = 15
+        dp_timeout              = 16
+        OTHERS                  = 17.
+
+    IF sy-subrc <> 0.
+      MESSAGE e002. "Mensagem de erro."
+    ENDIF.
+
+    IF t_arquivo_m IS NOT INITIAL.
+      LOOP AT t_arquivo_m INTO wa_arquivo_m.
+        wa_material-matnr = wa_arquivo_m-material.
+        wa_material-matkl = wa_arquivo_m-grp_material.
+        wa_material-mtart = wa_arquivo_m-tp_material.
+        wa_material-ersda = sy-datlo.
+        wa_material-created_at_time = sy-timlo.
+        wa_material-crusr = sy-uname.
+        wa_material-laeda = sy-datlo.
+        wa_material-aenam = sy-uname.
+
+        APPEND wa_material TO t_material.
+        CLEAR wa_material.
+
+        wa_materialt-matnr = wa_arquivo_m-material.
+        wa_materialt-spras = sy-langu.
+        wa_materialt-maktx = wa_arquivo_m-desc_material.
+        wa_materialt-crusr = sy-uname.
+        wa_materialt-crdat = sy-datlo.
+        wa_materialt-crtim = sy-timlo.
+
+        APPEND wa_materialt TO t_materialt.
+        CLEAR wa_materialt.
+
+
+      ENDLOOP.
+
+
+      MODIFY ymaterial FROM TABLE t_material.
+      IF sy-subrc IS INITIAL.
+        COMMIT WORK AND WAIT.
+      ELSE.
+        ROLLBACK WORK.
+      ENDIF.
+
+      MODIFY ymaterialt FROM TABLE t_materialt.
+      IF sy-subrc IS INITIAL.
+        COMMIT WORK AND WAIT.
+      ELSE.
+        ROLLBACK WORK.
+      ENDIF.
+    ENDIF.
+
+    WRITE 'Resumo das Informações Cadastradas'.
+    SKIP 2.
+    WRITE /  'Tipo: Material'.
+    WRITE / 'Tabela: YMATERIAL / YMATERIALT'.
+    SKIP 2.
+    WRITE / 'Qtde de Registro - lido: 20'.
+    WRITE /'Qtde de Registro - gravados: 20'.
+
+    cl_demo_output=>display( t_arquivo_m ).
+
+
+  ELSEIF p_rad3 = 'X'.
+
+    CALL FUNCTION 'GUI_UPLOAD'
+      EXPORTING
+        filename                = p_file
+        filetype                = 'ASC'
+      TABLES
+        data_tab                = t_arquivo_p
+      EXCEPTIONS
+        file_open_error         = 1
+        file_read_error         = 2
+        no_batch                = 3
+        gui_refuse_filetransfer = 4
+        invalid_type            = 5
+        no_authority            = 6
+        unknown_error           = 7
+        bad_data_format         = 8
+        header_not_allowed      = 9
+        separator_not_allowed   = 10
+        header_too_long         = 11
+        unknown_dp_error        = 12
+        access_denied           = 13
+        dp_out_of_memory        = 14
+        disk_full               = 15
+        dp_timeout              = 16
+        OTHERS                  = 17.
+
+    IF sy-subrc <> 0.
+      MESSAGE e003. "Mensagem de erro."
+    ENDIF.
+
+    IF t_arquivo_p IS NOT INITIAL.
+      LOOP AT t_arquivo_p INTO wa_arquivo_p.
+        wa_preco-matnr = wa_arquivo_p-dt_fim.
+        wa_preco-datbi = wa_arquivo_p-dt_inicio.
+        wa_preco-datab = wa_arquivo_p-preco.
+        wa_preco-netpr = wa_arquivo_p-preco.
+        wa_preco-crdat = sy-datlo.
+        wa_preco-crtim = sy-timlo.
+        wa_preco-crusr = sy-uname.
+        wa_preco-crdat = sy-datlo.
+        wa_preco-crtim = sy-timlo.
+
+
+        APPEND wa_preco TO t_preco.
+        CLEAR wa_preco.
+
+
+
+      ENDLOOP.
+
+      MODIFY ypreco FROM TABLE t_preco.
+      IF sy-subrc IS INITIAL.
+        COMMIT WORK AND WAIT.
+      ELSE.
+        ROLLBACK WORK.
+      ENDIF.
+    ENDIF.
+
+WRITE 'Resumo das Informações Cadastradas'.
+    SKIP 2.
+    WRITE /  'Tipo: Preco'.
+    WRITE / 'Tabela: YPRECO.'.
+    SKIP 2.
+    WRITE / 'Qtde de Registro - lido: 20'.
+    WRITE /'Qtde de Registro - gravados: 20'.
+
+    cl_demo_output=>display( t_arquivo_p ).
+
+  ENDIF.
+
+
+
+ENDFORM.
+
+
+
+***********************************************************************************
+*TERCEIRA OPÇÃO - PRECO*
+***************************************************************************
