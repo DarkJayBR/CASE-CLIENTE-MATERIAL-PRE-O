@@ -2,25 +2,40 @@
 *& Report ZTREINA_ABAP45EXERC_001
 *&---------------------------------------------------------------------*
 *&
-*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------
 REPORT ZTREINA_ABAP45EXERC_001 NO STANDARD PAGE HEADING.
 
+TYPES: BEGIN OF tl_jc_mara,
+         matnr TYPE mara-matnr,
+         mtart TYPE mara-mtart,
+         matkl TYPE mara-matkl,
+       END OF tl_jc_mara.
 
-DATA:
-tl_makt TYPE TABLE OF makt,
-wl_makt TYPE makt.
 
-SELECT *
-FROM makt
-INTO TABLE tl_makt
-WHERE SPRAS EQ'P'.
+DATA: tl_mara TYPE TABLE OF  tl_jc_mara,
+      tl_makt TYPE TABLE OF makt.
 
-SORT: tl_makt by maktx ASCENDING.
+DATA: wl_makt TYPE makt,
+      wl_mara TYPE  tl_jc_mara.
 
-LOOP AT tl_makt
+SELECT matnr mtart matkl
+  FROM mara
+  INTO TABLE tl_mara.
 
-INTO wl_makt.
+SELECT matnr maktx
+  FROM makt
+  INTO CORRESPONDING FIELDS OF TABLE tl_makt
+  FOR ALL ENTRIES IN tl_mara
+  WHERE matnr EQ tl_mara-matnr
+    AND spras EQ 'P'.
 
-WRITE / wl_makt.
+LOOP AT tl_makt INTO wl_makt.
 
-  ENDLOOP.
+  READ TABLE tl_mara INTO wl_mara WITH KEY matnr = wl_makt-matnr.
+
+  WRITE: / wl_makt-maktx,
+         / wl_mara-matkl,
+         / wl_mara-matnr,
+         / wl_mara-mtart .
+
+ENDLOOP.
