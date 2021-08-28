@@ -1,0 +1,26 @@
+*&---------------------------------------------------------------------*
+*& Report ZTREINA_ABAP45EXERC_001
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZTREINA_ABAP45EXERC_001 NO STANDARD PAGE HEADING.
+
+
+DATA:
+tl_makt TYPE TABLE OF makt,
+wl_makt TYPE makt.
+
+SELECT *
+FROM makt
+INTO TABLE tl_makt
+WHERE SPRAS EQ'P'.
+
+SORT: tl_makt by maktx ASCENDING.
+
+LOOP AT tl_makt
+
+INTO wl_makt.
+
+WRITE / wl_makt.
+
+  ENDLOOP.
