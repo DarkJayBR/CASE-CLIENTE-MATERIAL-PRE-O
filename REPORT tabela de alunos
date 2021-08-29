@@ -1,0 +1,53 @@
+*&---------------------------------------------------------------------*
+*& Report ZTREINA_ABAP45EXERC_002
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZTREINA_ABAP45EXERC_002.
+
+
+TYPES: BEGIN OF tl_jc_kna1,
+         kunnr TYPE kna1-kunnr,
+         name1 TYPE kna1-name1,
+         regio TYPE kna1-regio,
+         ort01 TYPE kna1-ort01,
+         land1 TYPE kna1-land1,
+
+       END OF tl_jc_kna1.
+
+
+DATA: tl_kna1 TYPE TABLE OF tl_jc_kna1,
+      tl_t005t TYPE TABLE OF t005t,
+      wl_kna1 TYPE  tl_jc_kna1,
+      wl_t005t TYPE t005t.
+
+SELECT KUNNR NAME1 REGIO ORT01 LAND1
+  FROM kna1
+  INTO TABLE tl_kna1.
+
+
+SELECT *
+  FROM t005t
+  INTO TABLE tL_t005t
+  FOR ALL ENTRIES IN tl_kna1
+  WHERE land1 EQ tl_kna1-land1
+    AND spras EQ 'P'.
+
+
+
+IF sy-subrc IS INITIAL.
+
+SORT: tl_t005t BY landx.
+
+LOOP AT tl_kna1 INTO wl_kna1.
+
+  READ TABLE tl_t005t INTO wl_t005t WITH KEY land1 = wl_kna1-land1
+  BINARY SEARCH.
+
+  WRITE: wl_kna1-kunnr, wl_kna1-land1, wl_kna1-name1, wl_t005t-landx.
+
+
+
+
+ ENDLOOP.
+ENDIF.
