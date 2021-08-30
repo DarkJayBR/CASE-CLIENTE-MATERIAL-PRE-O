@@ -1,9 +1,9 @@
-*&---------------------------------------------------------------------*
+
 *& Report ZTREINA_ABAP45EXERC_002
 *&---------------------------------------------------------------------*
 *&
 *&---------------------------------------------------------------------*
-REPORT ZTREINA_ABAP45EXERC_002.
+REPORT ZTREINA_ABAP45EXERC_002 NO STANDARD PAGE HEADING.
 
 
 TYPES: BEGIN OF tl_jc_kna1,
@@ -33,6 +33,11 @@ SELECT *
   WHERE land1 EQ tl_kna1-land1
     AND spras EQ 'P'.
 
+WRITE: /, 02 'Cód.Cliente',
+          30 'Nome Cliente',
+          70 'Região',
+          80 'Local'.
+          ULINE.
 
 
 IF sy-subrc IS INITIAL.
@@ -44,10 +49,11 @@ LOOP AT tl_kna1 INTO wl_kna1.
   READ TABLE tl_t005t INTO wl_t005t WITH KEY land1 = wl_kna1-land1
   BINARY SEARCH.
 
-  WRITE: wl_kna1-kunnr, wl_kna1-land1, wl_kna1-name1, wl_t005t-landx.
-
-
-
+  WRITE: /, 02 '|',WL_KNA1-KUNNR,
+          30 '|',WL_KNA1-NAME1,
+          70 '|',WL_KNA1-REGIO,
+          80 '|',WL_KNA1-ORT01,
+          sy-uline.
 
  ENDLOOP.
 ENDIF.
