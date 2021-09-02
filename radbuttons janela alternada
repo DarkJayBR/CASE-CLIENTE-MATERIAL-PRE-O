@@ -1,0 +1,148 @@
+*&---------------------------------------------------------------------*
+*& Report ZALN045_EX_01
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zaln045_ex_01 NO STANDARD PAGE HEADING.
+
+TABLES: mara.
+
+SELECTION-SCREEN BEGIN OF BLOCK main WITH FRAME TITLE TEXT-t01.
+
+  PARAMETERS: p_rad1 RADIOBUTTON GROUP rb1 USER-COMMAND muda_tela
+                                                       DEFAULT 'X'.
+  PARAMETERS: p_rad2 RADIOBUTTON GROUP rb1.
+  PARAMETERS: p_rad3 RADIOBUTTON GROUP rb1.
+
+SELECTION-SCREEN END OF BLOCK main.
+
+SELECTION-SCREEN BEGIN OF BLOCK case WITH FRAME TITLE TEXT-t02.
+
+  SELECT-OPTIONS: s_matnr FOR mara-matnr MODIF ID t1,
+                  s_mtart FOR mara-mtart MODIF ID t1.
+
+SELECTION-SCREEN END OF BLOCK case.
+
+SELECTION-SCREEN BEGIN OF BLOCK cas2 WITH FRAME TITLE TEXT-t03.
+
+  SELECT-OPTIONS: p_matnr FOR mara-matnr MODIF ID t2,
+                  p_mtart FOR mara-mtart MODIF ID t2.
+
+SELECTION-SCREEN END OF BLOCK cas2.
+
+SELECTION-SCREEN BEGIN OF BLOCK cas3 WITH FRAME TITLE TEXT-t04.
+
+
+  SELECT-OPTIONS: s_matnr2 FOR mara-matnr MODIF ID t3,
+                  s_mtart2 FOR mara-mtart MODIF ID t3.
+
+
+SELECTION-SCREEN END OF BLOCK cas3.
+
+
+*-----------------------------------------------------------------------------------------------------
+
+AT SELECTION-SCREEN OUTPUT.
+
+  PERFORM modifica_tela.
+
+FORM modifica_tela .
+
+  LOOP AT SCREEN.
+
+    IF p_rad1 = 'X'.
+      IF screen-group1 = 'T2'.
+        screen-invisible = 1.
+        screen-input     = 0.
+        screen-active    = 0.
+        MODIFY SCREEN.
+        CONTINUE.
+      ENDIF.
+
+      IF screen-group1 = 'T3'.
+        screen-invisible = 1.
+        screen-input     = 0.
+        screen-active    = 0.
+        MODIFY SCREEN.
+        CONTINUE.
+      ENDIF.
+
+      IF screen-group1 = 'T1'.
+        screen-invisible = 0.
+        screen-input     = 1.
+        screen-active    = 1.
+        MODIFY SCREEN.
+        CONTINUE.
+      ENDIF.
+
+    ELSE.
+
+    ENDIF.
+  ENDLOOP.
+
+  LOOP AT SCREEN.
+
+    IF p_rad2 = 'X'.
+
+      IF screen-group1 = 'T1'.
+        screen-invisible = 1.
+        screen-input     = 0.
+        screen-active    = 0.
+        MODIFY SCREEN.
+        CONTINUE.
+      ENDIF.
+
+      IF screen-group1 = 'T3'.
+        screen-invisible = 1.
+        screen-input     = 0.
+        screen-active    = 0.
+        MODIFY SCREEN.
+        CONTINUE.
+      ENDIF.
+
+      IF screen-group1 = 'T2'.
+        screen-invisible = 0.
+        screen-input     = 1.
+        screen-active    = 1.
+        MODIFY SCREEN.
+        CONTINUE.
+      ENDIF.
+
+    ENDIF.
+  ENDLOOP.
+
+
+  LOOP AT SCREEN.
+
+    IF p_rad3 = 'X'.
+
+      IF screen-group1 = 'T2'.
+        screen-invisible = 1.
+        screen-input     = 0.
+        screen-active    = 0.
+        MODIFY SCREEN.
+        CONTINUE.
+      ENDIF.
+
+      IF screen-group1 = 'T1'.
+        screen-invisible = 1.
+        screen-input     = 0.
+        screen-active    = 0.
+        MODIFY SCREEN.
+        CONTINUE.
+      ENDIF.
+
+
+      IF screen-group1 = 'T3'.
+        screen-invisible = 0.
+        screen-input     = 1.
+        screen-active    = 1.
+        MODIFY SCREEN.
+        CONTINUE.
+      ENDIF.
+
+    ENDIF.
+  ENDLOOP.
+
+
+ENDFORM.
