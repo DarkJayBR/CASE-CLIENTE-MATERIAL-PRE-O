@@ -1,0 +1,105 @@
+*&---------------------------------------------------------------------*
+*& Report ZALN045_EX_02
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZALN045_EX_02 NO STANDARD PAGE HEADING.
+
+*********************************************************************
+*TABLES
+********************************************************************
+
+TABLES: mara.
+TABLES: ZESTOQUE_TREINO.
+
+***************************************************************
+*INCLUDES
+****************************************************************
+
+INCLUDE: zaln045_case_top,
+         zaln045_case_sel.
+
+
+***********************************************************
+** DECLARAÇÃO DOS TYPES
+***********************************************************
+
+TYPES: BEGIN OF TP_ZESTOQUE_TREINO,
+       MATERIAL TYPE ZESTOQUE-MATERIAL,
+       DESCRICAO TYPE ZESTOQUE-DESCRICAO,
+       QUANTIDADE TYPE ZESTOQUE-QUANTIDADE,
+       UNIDADEMEDIDA TYPE ZESTOQUE-UNIDADEMEDIDA,
+  END OF TP_ZESTOQUE_TREINO.
+
+************************************************************
+*DECLARAÇÃO DE TABELAS E WORK-AREAS
+************************************************************
+
+DATA: TL_TP_ZESTOQUE_TREINO TYPE TABLE OF TP_ZESTOQUE_TREINO,
+      WL_TP_ZESTOQUE_TREINO TYPE TP_ZESTOQUE_TREINO.
+
+SELECT MATERIAL DESCRICAO QUANTIDADE
+  FROM ZESTOQUE_TREINO
+  INTO TABLE TL_TP_ZESTOQUE_TREINO ORDER BY MATERIAL.
+
+***********************************************************
+*CONDIÇÃO
+***********************************************************
+
+IF p_cheki EQ 'X'.
+    SELECT MATERIAL DESCRICAO QUANTIDADE
+    FROM ZESTOQUE_TREINO
+    INTO TABLE TL_TP_ZESTOQUE_TREINO "
+      WHERE MATERIAL IN S_MATNR
+        AND CATEGORIA IN S_MTART
+        AND EXCLUIDO EQ 'X'
+      ORDER BY MATERIAL.
+ ELSE.
+    SELECT MATERIAL DESCRICAO QUANTIDADE
+     FROM ZESTOQUE_TREINO
+     INTO TABLE TL_TP_ZESTOQUE_TREINO "
+     WHERE MATERIAL IN S_MATNR
+       AND CATEGORIA IN  S_MTART
+       AND EXCLUIDO EQ ''
+     ORDER BY MATERIAL.
+ ENDIF.
+
+*************************************************************
+*CABEÇÁRIO
+*************************************************************
+
+  WRITE: 02 'Material', 20 'Descricao', 50 'Quantidade', 70 'Unidade de Medida'. ULINE.
+
+**************************************************************
+*WRITE DA WORK-ARE
+**************************************************************
+
+  LOOP AT tl_tp_zestoque_treino INTO wl_tp_zestoque_treino.
+    WRITE: 02 '|', wl_tp_zestoque_treino-material,
+           20 '|', wl_tp_zestoque_treino-descricao,
+           50 '|', wl_tp_zestoque_treino-quantidade,
+           70 '|'.
+           uline.
+
+ ENDLOOP.
+
+------------------------------------------------------------------------------------------------------------------------------
+
+O QUE TEM NOS INCLUDES:
+
+*CHECKBUTTON -------------------------------------------
+
+SELECTION-SCREEN BEGIN OF BLOCK case WITH FRAME TITLE TEXT-t02.
+
+  SELECT-OPTIONS: s_matnr FOR ZESTOQUE_TREINO-MATERIAL NO INTERVALS.
+  SELECT-OPTIONS: s_mtart FOR ZESTOQUE_TREINO-CATEGORIA.
+
+
+SELECTION-SCREEN END OF BLOCK case.
+
+
+SELECTION-SCREEN BEGIN OF BLOCK main WITH FRAME TITLE TEXT-t01.
+
+PARAMETERS: p_cheki AS CHECKBOX DEFAULT ' '.
+
+SELECTION-SCREEN END OF BLOCK main.
