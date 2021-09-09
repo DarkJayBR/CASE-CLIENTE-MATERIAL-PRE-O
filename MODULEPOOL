@@ -1,0 +1,362 @@
+*&---------------------------------------------------------------------*
+*& PoolMóds.        SAPMZABAP_ALN045_EX4
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE sapmzabap_aln045_ex4_top.
+
+INCLUDE sapmzabap_aln045_ex4_o01.
+INCLUDE sapmzabap_aln045_ex4_i01.
+
+*INCLUDE mzabap_aln045_ex4_i01.
+
+*INCLUDE mzabap_aln045_ex4_i02.
+
+INCLUDE sapmzabap_aln045_ex4_f01.
+
+
+
+-----------------------------------------------------------------------------------------
+
+*&---------------------------------------------------------------------*
+*& Include SAPMZABAP_ALN045_EX4_TOP                 - PoolMóds.        SAPMZABAP_ALN045_EX4
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZABAP_ALN045_EX4.
+
+TABLES: ZTALN045_04, ZTALN045_04_01.
+
+-------------------------------------------------------------------------------------------
+
+*&---------------------------------------------------------------------*
+*& Include          SAPMZABAP_ALN045_EX4_O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module STATUS_9000 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_9000 OUTPUT.
+ SET PF-STATUS 'STATUS_PADRAO'.
+ SET TITLEBAR 'TITLE_9000'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_9001 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_9001 OUTPUT.
+ SET PF-STATUS 'STATUS_PADRAO'.
+ SET TITLEBAR 'TITLE_9001'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_9002 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+*MODULE status_9002 OUTPUT.
+* SET PF-STATUS 'xxxxxxxx'.
+* SET TITLEBAR 'xxx'.
+*ENDMODULE.
+
+MODULE status_9003 OUTPUT.
+ SET PF-STATUS 'STATUS_PADRAO'.
+ SET TITLEBAR 'TITLE_9003'.
+ENDMODULE.
+
+------------------------------------------------------------------------------------------------
+
+*&---------------------------------------------------------------------*
+*& Include          SAPMZABAP_ALN045_EX4_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_9000  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_9000 INPUT.
+  CASE sy-ucomm.
+    WHEN 'CANCEL'.
+      LEAVE PROGRAM.
+    WHEN 'BACK'.
+      SET SCREEN 0.
+      LEAVE SCREEN.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'LOCACAO'.
+      CALL SCREEN 9001.
+    WHEN 'DEVOLUCAO'.
+      CALL SCREEN 9002.
+    WHEN 'CAD_FILMES'.
+      CALL SCREEN 9003.
+    WHEN 'MODIFICAR'.
+      CALL SCREEN 9004.
+    WHEN OTHERS.
+  ENDCASE.
+ENDMODULE.
+
+
+MODULE preenche_filme INPUT.
+SELECT SINGLE *
+FROM ZTALN045_04
+INTO ZTALN045_04
+WHERE id_filme = ZTALN045_04-id_filme.
+ENDMODULE.
+
+
+MODULE exit_command INPUT.
+  IF sy-ucomm EQ 'CANCEL'.
+    LEAVE PROGRAM.
+  ENDIF.
+ENDMODULE.
+
+
+MODULE user_command_9001 INPUT.
+  CASE sy-ucomm.
+    WHEN 'BACK'.
+      SET SCREEN 0.
+      LEAVE SCREEN.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'SALVAR'.
+      PERFORM f_salva_aluguel.
+  ENDCASE.
+ENDMODULE.
+
+MODULE user_command_9003 INPUT.
+  PERFORM: f_user_command_9003.
+ENDMODULE.
+
+MODULE preenche_nome INPUT.
+  SELECT SINGLE nome_filme
+    FROM ZTALN045_04
+    INTO ZTALN045_04-nome_filme
+    WHERE id_filme = ZTALN045_04-id_filme.
+ENDMODULE.
+
+--------------------------------------------------------------------------------------------------
+
+PROCESS BEFORE OUTPUT.
+ MODULE STATUS_9002.
+
+PROCESS AFTER INPUT.
+ MODULE USER_COMMAND_9002.
+
+---------------------------------------------------------------------------------
+PROCESS BEFORE OUTPUT.
+  MODULE status_9003.
+
+PROCESS AFTER INPUT.
+  FIELD: ztreina_001-id_filme MODULE preenche_filme.
+
+  MODULE user_command_9003.
+
+  MODULE exit_command AT EXIT-COMMAND.
+
+--------------------------------------------------------------------------
+
+PROCESS BEFORE OUTPUT.
+  MODULE status_9001.
+
+PROCESS AFTER INPUT.
+  FIELD ztreina_001-id_filme MODULE preenche_nome.
+
+  MODULE user_command_9001.
+
+  MODULE exit_command AT EXIT-COMMAND.
+
+--------------------------------------------------------------------------
+
+*&---------------------------------------------------------------------*
+*& Include          SAPMZTREINA_001I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_9000  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_9000 INPUT.
+  CASE sy-ucomm.
+    WHEN 'CANCEL'.
+      LEAVE PROGRAM.
+    WHEN 'BACK'.
+      SET SCREEN 0.
+      LEAVE SCREEN.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'LOCACAO'.
+      CALL SCREEN 9001.
+    WHEN 'DEVOLUCAO'.
+      CALL SCREEN 9002.
+    WHEN 'CAD_FILMES'.
+      CALL SCREEN 9003.
+    WHEN 'MODIFICAR'.
+      CALL SCREEN 9004.
+    WHEN OTHERS.
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT_COMMAND  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit_command INPUT.
+  IF sy-ucomm EQ 'CANCEL'.
+    LEAVE PROGRAM.
+  ENDIF.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_9003  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_9003 INPUT.
+  PERFORM: user_command_9003.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  PREENCHE_FILME  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE preenche_filme INPUT.
+  SELECT SINGLE *
+    FROM ztreina_001
+    INTO ztreina_001
+    WHERE id_filme = ztreina_001-id_filme.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_9001  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_9001 INPUT.
+  CASE sy-ucomm.
+    WHEN 'BACK'.
+      SET SCREEN 0.
+      LEAVE SCREEN.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'SALVAR'.
+      PERFORM salva_aluguel.
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  PREENCHE_NOME  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE preenche_nome INPUT.
+  SELECT SINGLE nome_filme
+    FROM ztreina_001
+    INTO ztreina_001-nome_filme
+    WHERE id_filme = ztreina_001-id_filme.
+ENDMODULE.
+
+------------------------------------------------------------------------
+
+*&---------------------------------------------------------------------*
+*& Include          SAPMZTREINA_001F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form user_command_9003
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM user_command_9003.
+  DATA: wl_treina1 TYPE ztreina_001,
+        wl_treina2 TYPE ztreina_002.
+  CASE sy-ucomm.
+    WHEN 'BACK'.
+      SET SCREEN 0.
+      LEAVE SCREEN.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'SALVAR'.
+      wl_treina1 = ztreina_001.
+      MODIFY ztreina_001 FROM wl_treina1.
+
+      wl_treina2 = ztreina_002.
+      wl_treina2-id_filme = wl_treina1-id_filme.
+      MODIFY ztreina_002 FROM wl_treina2.
+
+      COMMIT WORK.
+    WHEN 'DELETE'.
+      DELETE FROM ztreina_001 WHERE id_filme = ztreina_001-id_filme.
+      DELETE FROM ztreina_002 WHERE id_filme = ztreina_001-id_filme.
+      COMMIT WORK.
+  ENDCASE.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form salva_aluguel
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM salva_aluguel.
+  DATA: wl_ztreina_002 TYPE ztreina_002.
+
+  SELECT SINGLE *
+    FROM ztreina_002
+    INTO wl_ztreina_002
+    WHERE id_filme = ztreina_001-id_filme.
+
+  IF sy-subrc IS NOT INITIAL.
+    MESSAGE 'Filme não existe' TYPE 'E'.
+  ELSE.
+    IF wl_ztreina_002-quantidade_em_estoque GE ztreina_002-quantidade_alugada.
+      SUBTRACT ztreina_002-quantidade_alugada FROM wl_ztreina_002-quantidade_em_estoque.
+      ADD ztreina_002-quantidade_alugada TO wl_ztreina_002-quantidade_alugada.
+      MODIFY ztreina_002 FROM wl_ztreina_002.
+      COMMIT WORK.
+    ELSE.
+      MESSAGE 'Não temos quantidade suficiente para alugar' TYPE 'E'.
+    ENDIF.
+  ENDIF.
+ENDFORM.
+
+----------------------------------------------------------------------------------------
+
+*&---------------------------------------------------------------------*
+*& Include SAPMZTREINA_001TOP                       - PoolMóds.        SAPMZTREINA_001
+*&---------------------------------------------------------------------*
+PROGRAM SAPMZTREINA_001.
+
+TABLES: ztreina_001, ztreina_002.
+
+----------------------------------------------------------------------------
+
+*&---------------------------------------------------------------------*
+*& Include          SAPMZTREINA_001O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module STATUS_9000 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_9000 OUTPUT.
+ SET PF-STATUS 'STATUS_PADRAO'.
+ SET TITLEBAR 'TITLE_9000'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_9003 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_9003 OUTPUT.
+ SET PF-STATUS 'STATUS_PADRAO'.
+ SET TITLEBAR 'TITLE_9003'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_9001 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_9001 OUTPUT.
+ SET PF-STATUS 'STATUS_PADRAO'.
+ SET TITLEBAR 'TITLE_9001'.
+ENDMODULE.
